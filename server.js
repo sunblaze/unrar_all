@@ -60,64 +60,11 @@ function is_first_volume(file_name){
   }
 }
 
-function is_volume_one(file_path,callback){
-  var child = spawn('unrar',['l',file_path]),
-      out_buffer = new Buffer(200 * 1024),
-      out_length = 0;
-  
-  child.stdout.setEncoding('utf8');
-  child.stdout.on('data', function (data) {
-    out_length += out_buffer.write(data,out_length);
-  });
-  
-  child.stderr.on('data', function (data) {
-    console.log('stderr: ' + data);
-  });
-  
-  child.on('exit', function (code) {
-    var out_string = out_buffer.toString('utf8',0,out_length);
-
-    if(code === 0){
-      var matches = /volume (\d+)\s*$/.exec(out_string);
-      if(matches !== null){
-        callback(matches[1] === "1");
-      }else{
-        callback(/\d+%\s*$/.test(out_string));
-      }
-    }else{
-      callback(false);
-    }
-  });
-}
-
-function only_volume_ones(file_paths,callback){
-  if(file_paths.length > 0){
-    is_volume_one(file_paths[0],function(result){
-      var good = result ? [file_paths[0]] : [];
-      file_paths.shift();
-      only_volume_ones(file_paths,function(files){
-        callback(good.concat(files));
-      });
-    });
-  }else{
-    callback([]);
-  }
-}
-
 // "/home/jsmith/Code/test_rar_dir"
 // "/home/jsmith/TVShows"
-
 scan_dir("/home/jsmith/TVShows",function(rar_files){
-  // var front_volumes = rar_files.filter(is_volume_one);
-  // is_volume_one(rar_files[2],function(result){console.log('res:'+result);});
-  
-  console.log("all:"+rar_files.length);
-  console.log("ones:"+rar_files.filter(is_first_volume).length);
-  
-  // only_volume_ones(rar_files,function(result){
-    // console.log("ones:"+result.length);
-    // result.forEach(function(res){
-      // console.log('res:'+res);
-    // });
-  // });
+  var first_volumes = rar_files.filter(is_first_volume);
+  first_volumes.forEach(function(res){
+    console.log('res:'+res);
+  });
 });
